@@ -1,3 +1,5 @@
+import syslog
+import json
 from excepts import InvalidUsage
 from flask import Flask, request, jsonify
 from starbase import Connection
@@ -8,13 +10,13 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello World!'
+    return 'Hello World!ssd1'
 
 
 @app.route('/stream')
 def stream():
     if request.content_type == 'application/json':
-        inp = request.get_json()
+        inp = json.loads(request.data)
         table = inp['collection']
         t = connection.table(table)
         if not t.exists():
@@ -25,6 +27,8 @@ def stream():
                 for row in inp['data']:
                     key = row['id']
                     values = row['values']
+                    for k in values.keys():
+                        values[k + ':fam'] = values.pop(k)
                     batch.insert(key, values)
                 batch.commit()
             except Exception as e:
@@ -42,4 +46,4 @@ def handle_invalid_usage(error):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
