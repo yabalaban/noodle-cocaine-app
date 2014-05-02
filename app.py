@@ -13,9 +13,9 @@ def hello_world():
     return 'Hello World!ssd1'
 
 
-@app.route('/stream')
+@app.route('/stream', methods=['GET', 'POST'])
 def stream():
-    if request.content_type == 'application/json':
+    if 'application/json' in request.content_type:
         inp = json.loads(request.data)
         table = inp['collection']
         t = connection.table(table)
