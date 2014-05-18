@@ -92,8 +92,11 @@ def process_input(project_id, collection, secret_key, inp):
     key = project_id + '_' + collection + '_' + secret_key + '_pyc'
     proc_obj = memcache.get(str(key))
     if proc_obj is None:
-        obj = imp.load_compiled(key[:-4], '/var/cache/cocaine/processing_codes/' + key[:-4] + '.pyc')
-        proc_obj = obj.ProcessingClass()
+        try:
+            obj = imp.load_compiled(key[:-4], '/var/cache/cocaine/processing_codes/' + key[:-4] + '.pyc')
+            proc_obj = obj.ProcessingClass()
+        except Exception as e:
+            proc_obj = ProcessingClass()
         memcache.set(str(key), proc_obj, 3600)
     return proc_obj.process(inp)
 
@@ -181,6 +184,23 @@ def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
+
+
+class ProcessingClass:
+    """ProcessingClass
+
+    Класс-заглушка, используемый при обработке входных данных в случае, когда файл-обработчик
+    отсутствует.
+    """
+    def process(self, inp):
+        """process(inp)
+
+        Дублирует входящий словарь.
+
+        Returns:
+            Словарь, поданных на вход
+        """
+        return inp
 
 if __name__ == '__main__':
     app.run(debug=True)
